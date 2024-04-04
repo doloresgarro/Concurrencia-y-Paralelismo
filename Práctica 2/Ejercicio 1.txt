@@ -1,5 +1,7 @@
 Ejercicio 1 
-Un sistema operativo mantiene 5 instancias de un recurso almacenadas en una cola, cuando un proceso necesita usar una instancia del recurso la saca de la cola, la usa y cuando termina de usarla la vuelve a depositar.
+Un sistema operativo mantiene 5 instancias de un recurso almacenadas en una cola, 
+cuando un proceso necesita usar una instancia del recurso la saca de la cola, la 
+usa y cuando termina de usarla la vuelve a depositar.
 
 sem mutex = 1, rec = 5; // exclusion mutua
 cola C;
