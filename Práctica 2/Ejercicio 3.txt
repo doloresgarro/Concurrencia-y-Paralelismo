@@ -25,7 +25,8 @@ process maestra {
 			seguir = true; // p/ el prox alumno
 		}
 		else { 
-			V(espera_alumnos[aux]);// envia de nuevo la tarea		}
+			V(espera_alumnos[aux]);// envia de nuevo la tarea	
+		}
 		tareaOk = false; // por si la modifico a true		
 	}
 }
