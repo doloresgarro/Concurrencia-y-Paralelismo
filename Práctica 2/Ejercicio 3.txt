@@ -1,0 +1,51 @@
+3. Se tiene un curso con 40 alumnos, la maestra entrega una tarea distinta a cada alumno, luego cada alumno realiza su tarea y se la entrega a la maestra para que la corrija, esta revisa la tarea y si está bien le avisa al alumno que puede irse, si la tarea está mal le indica los errores, el alumno corregirá esos errores y volverá a entregarle la tarea a la maestra para que realice la corrección nuevamente, esto se repite hasta que la tarea no tenga errores.
+
+int contador = 0;
+boolean seguir = true, tareaOK = false;
+sem mutex = 1, maestra = 0, espera_alumnos[40] = ([40] 0), listo = 0, barrera = 0;
+
+process maestra {
+	int i, aux; 
+	P(maestra); // llegaron todos los alumnos
+	for i = 1..40 {
+		aux = (rand mod 40); // selecciona al alumno
+		V(espera_alumnos[aux]); // le da la tarea
+		P(listo); // el alu le avisa que recibio la tarea
+
+		// corrige tarea --> cambiaria el valor de tareaOk
+
+		if (tareaOK) { // si la tarea esta bien termina
+			seguir = false;
+			V(espera_alumnos[aux]);// le avisa que termino
+			seguir = true; // p/ el prox alumno
+		}
+		else { 
+			V(espera_alumnos[aux]);// envia de nuevo la tarea		}
+		tareaOk = false; // por si la modifico a true		
+	}
+}
+
+
+process alumno [id: 0..39] {
+	int i; 
+	P(mutex); // exclusion mutua
+	contador = contador + 1; // contador de alumnos 
+	if (contador == 40) { // llegaron todos los alumnos
+		for i = 1..40 { 
+			V(barrera); // llama a c/ alu que esta esperando 
+		}
+		V(maestra); // llama a la maestra 		
+	}
+	V(mutex); // libero SC para otro chico
+
+	P(barrera); // se pausan hasta que los llamen
+	
+	P(espera_alumnos[id]); // recibe la tarea
+	while (seguir) {
+		// realiza tarea
+		V(listo); // le avisa a la maestra que ya termino
+		P(espera_alumnos[id]); // recibe si debe seguir o no 
+	}
+}
+
+

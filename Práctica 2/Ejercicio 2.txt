@@ -1,0 +1,50 @@
+Ejercicio 2
+A una cerealera van T camiones a descargarse trigo y M camiones a descargar maíz. Sólo hay lugar para que 7 camiones a la vez descarguen pero no pueden ser más de 5 del mismo tipo de cereal.
+Nota: sólo se pueden usar procesos que representen a los camiones.
+
+---------------------------------------------------------------------
+- mutex --> semáforo para exclusión mutua
+- descargando --> sem para controlar el num de camiones descargando
+
+Las siguientes variables las inicializo en 5 porque pueden 
+- camiones_trigo --> sem para controlar camiones trigo descargando 
+- camiones_maiz --> sem para controlar camiones maiz descargando
+---------------------------------------------------------------------
+
+sem mutex = 1; camionesTrigo = 5, camionesMaiz = 5, descargando = 5;
+
+process camionTrigo[id: 0..T-1] {
+	if (camionesTrigo > 0) and (descargando > 0) {
+		P(mutex);  
+		camionesTrigo = camionesTrigo - 1; // resto 
+		descargando = descargando - 1;
+		V(mutex);
+
+		// descargar trigo
+
+		P(mutex);  // cuando termina de descargar  
+		camionesTrigo = camionesTrigo + 1; 
+		descargando = descargando + 1;
+		V(mutex);
+				
+	}
+}
+
+process camionMaiz[id: 0..M-1] {
+	if (camionesMaiz > 0) and (descargando > 0) {
+		P(mutex);  
+		camionesTrigo = camionesTrigo - 1;
+		tipoCereal = TipoCereal - 1;
+		V(mutex);
+
+		// descargar maiz
+
+		P(mutex);  // cuando termina de descargar  
+		camionesTrigo = camionesTrigo + 1; 
+		descargando = descargando + 1;
+		V(mutex);
+				
+	}
+}
+
+ 
