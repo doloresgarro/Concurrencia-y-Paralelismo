@@ -5,7 +5,7 @@ su turno (respetando el orden de llegada), saca una botella y se retira. Si encu
 Nota: maximizar la concurrencia; mientras se reponen las botellas se debe permitir que otros corredores se encolen. 
 
 int corredores = 0, botellas = 20;
-sem mutex = 1, espera[C] = ([C] 0), sinStock = 1, listo = 1, llegada = 1, espera_repo = 1;
+sem mutex = 1, espera[C] = ([C] 0), listo = 1, reponer = 1 ;
 cola q_ordenada;
 
 process corredor [id: 0..C-1] {
@@ -30,7 +30,7 @@ process corredor [id: 0..C-1] {
 	// toma botella
 	
 	// desencolo al corredor porque ya tomo su botella
-	P(mutex); // si pongo esta instruc dsp del if puede ser que otro proceso desencole y se vacíe la cola
+	P(mutex); // si pongo esta instrucción dsp del if puede ser que otro proceso gane la exclusion mutua, desencole y luego el proceso actual quiera desencolar cuando no hay nada --> se rompe
 	if (not empty(q_ordenada)) {
 		pop(q_ordenada, id);
 		V(mutex);
