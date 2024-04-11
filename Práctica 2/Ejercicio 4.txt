@@ -1,0 +1,149 @@
+Ejercicio 4
+4. Existen N personas que deben fotocopiar un documento cada una. 
+Resolver cada ítem usando semáforos:
+a) Implemente una solución suponiendo que existe una única fotocopiadora 
+compartida por todas las personas, y las mismas la deben usar de a una 
+persona a la vez, sin importar el orden. Existe una función Fotocopiar() 
+llamada por la persona que simula el uso de la fotocopiadora. 
+Sólo se deben usar los procesos que representan a las Personas.
+
+-------------------------------------------------------
+- mutex --> exclusión mutua
+- espera[N] --> semaforo privado para cada persona
+- resultados[N] --> para saber si ya fotocopio o no
+- impresora = 0 --> libre
+-------------------------------------------------------
+
+a.
+
+sem mutex = 1;
+
+process Persona[id: 0..N-1] {
+		P(mutex); 
+		Fotocopiar();
+		V(mutex);
+}
+
+-------------------------------------------------------
+
+b. Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada
+
+sem mutex = 1; // exclusion mutua
+boolean libre = true;
+cola C;
+sem espera[N] = ([N] 0);
+
+process Persona(id: 0..N-1) {
+
+    P(mutex);
+    if (libre) { libre = false; }
+    else { push(C, id);}
+    V(mutex);    // Salir de la sección crítica 
+
+    P(espera[id]);   // Esperar a que sea el turno de la persona
+    Fotocopiar();
+
+    P(mutex);
+    if (not (empty(C))) { pop(C,id); V(espera[id]) }  	  	    
+    else { libre = true; } 
+    V(mutex);
+
+}
+
+-------------------------------------------------------
+
+c) Modifique la solución de (b) para el caso en que se deba dar prioridad de acuerdo a la edad de cada persona (cuando la fotocopiadora está libre la debe usar la persona de mayor edad entre las que estén esperando para usarla).
+
+
+sem mutex = 1; // exclusion mutua
+boolean libre = true;
+cola C;
+sem espera[N] = ([N] 0);
+edad 
+
+process Persona(id: 0..N-1) {
+    int edad = X;
+	
+    P(mutex);
+    if (libre) { libre = false; }
+    else { push_ordenado(C, id, edad); }  
+    V(mutex);    // Salir de la sección crítica 
+
+    P(espera[id], edad);   // Esperar a que sea el turno de la persona
+    Fotocopiar();
+
+    P(mutex);
+    if (not (empty(C))) { pop(C, id, edad); V(espera[id], edad)}  	    
+    else { libre = true; } 
+    V(mutex);
+
+}
+
+-------------------------------------------------------
+
+d) Modifique la solución de (a) para el caso en que se deba respetar estrictamente el orden dado por el identificador del proceso (la persona X no puede usar la fotocopiadora hasta que no haya terminado de usarla la persona X-1).
+
+sem mutex = 1;
+int contador = 0; // sig persona 
+
+
+process Persona[id: 0..N-1] {
+	P(mutex); 
+	while (id <> contador) {  // sale del while cuando es su turno
+		V(mutex);         // mutex = 0		
+		P(mutex);	  // mutex = 1
+	}
+
+	Fotocopiar();
+	contador = contador + 1;  // id + 1
+
+	V(mutex);
+}
+
+-------------------------------------------------------
+
+e) Modifique la solución de (b) para el caso en que además haya un Empleado que le indica a cada persona cuando debe usar la fotocopiadora
+
+sem mutex = 1; // exclusion mutua
+sem permiso = 1;
+cola C;
+sem espera[N] = ([N] 0);
+
+process Persona(id: 0..N-1) {
+
+    P(mutex);
+    push(C, id);
+    V(mutex);    // Salir de la sección crítica 
+
+    V(permiso);	     // avisa a empleado que esta en la cola
+    P(espera[id]);   // Esperar a que sea su turno
+    Fotocopiar();
+    
+    V(listo);        // avisa al empleado que ya termino
+
+}
+
+
+process Empleado () {
+    int aux;
+    while (true) {
+	P(permiso);  // lo despiertan cuando hay al menos 1 persona en la C
+	
+	P(mutex);
+	id = pop(C, aux);      // desencola a la persona
+	V(mutex);
+
+   	V(espera[id]);       // espera a que la persona le diga q terminó
+	P(listo);            // indica que ya uso la fotocopiadora
+	
+    }
+}
+
+-------------------------------------------------------
+
+f) Modificar la solución (e) para el caso en que sean 10 fotocopiadoras. El empleado le indica a la persona cuando puede usar una fotocopiadora, y cual debe usar.
+
+
+
+
+
