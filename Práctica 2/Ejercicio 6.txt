@@ -1,0 +1,49 @@
+6. . Una empresa de turismo posee 4 combis con capacidad para 25 personas cada una y UN vendedor que vende los pasajes a los clientes de acuerdo al orden de llegada. 
+Hay C clientes que al llegar intentan comprar un pasaje para una combi en particular (el cliente conoce este dato); si aún hay lugar en la combi seleccionada se le da el pasaje y se dirige hacia la combi; en caso contrario se retira.
+Cada combi espera a que suban los 25 pasajeros, luego realiza el 
+viaje, y cuando llega al destino deja bajar a todos los pasajeros. Nota: maximizar la concurrencia; suponga que para cada combi al menos 25 clientes intentarán comprar pasaje.
+
+sem mutex = 1;
+sem espera[C] = ([C] 0);
+sem combis[4] = ([4] 0);  // combis desocupadas
+sem espera_vendedor = 1;
+Cola c_ordenada;
+boolean libre = true, disponible = false;
+
+process Cliente [id: 0..C-1] {
+	int numCombi, asiento;
+
+	P(mutex);
+	if (libre) { libre = false; }
+	else { push(c_ordenada(), id); }
+	V(mutex);
+
+	V(espera_vendedor);
+	P(espera[id]); // espera que el vendedor lo llame	
+	numCombi = (rand mod 4); // elige que combi quiere
+	if (disponible) {
+		// sube a la combi
+	} else {
+		// se retira
+	}
+	
+	P(mutex);
+	if (not empty(c_ordenada)) {
+		pop(c_ordenada, id);
+		V(mutex);
+	}
+}
+
+process Vendedor {
+	while (true) {
+		P(espera_vendedor); // espera que soliciten un asiento
+		if (combis[numCombi] == 0) { 
+			disponible = true;
+			combis[numCombi] = combis[numCombi] - 1;
+		}
+		else { disponible = false; }
+		V(espera_vendedor);
+	}
+}
+
+
