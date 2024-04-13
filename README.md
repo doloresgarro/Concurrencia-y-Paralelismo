@@ -1,4 +1,4 @@
-:signal_strength: Repositorio de la materia Conceptos de Bases de Datos
+:signal_strength: Repositorio de la materia Concurrencia y Paralelismo
 
 - Prácticas:
 
