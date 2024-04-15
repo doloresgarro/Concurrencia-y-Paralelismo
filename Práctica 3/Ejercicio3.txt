@@ -1,5 +1,6 @@
 3. En un corralón de materiales hay un empleado que debe atender a N clientes de acuerdo al orden de llegada. 
-Cuando un cliente es llamado por el empleado para ser atendido, le da una lista con los productos que comprará, y espera a que el empleado le entregue el comprobante de la compra realizada.
+Cuando un cliente es llamado por el empleado para ser atendido, le da una lista con los productos que comprará,
+y espera a que el empleado le entregue el comprobante de la compra realizada.
 
 
 Monitor Corralon {
