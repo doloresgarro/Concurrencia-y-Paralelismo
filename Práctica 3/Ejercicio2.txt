@@ -1,0 +1,188 @@
+2. Existen N personas que deben fotocopiar un documento cada una. Resolver cada ítem usando monitores:
+
+a) Implemente una solución suponiendo que existe una única fotocopiadora compartida por todas las personas, y las mismas la deben usar de a una persona a la vez, sin importar el orden. Existe una función Fotocopiar() que simula el uso de la fotocopiadora. 
+Sólo se deben usar los procesos que representan a las Personas (y los monitores que sean necesarios)
+
+--------------------------------------------------------------------
+
+Monitor Fotocopiadora() {
+	procedure fotocopiar() {
+		// fotocopiar
+	}
+}
+
+
+process Persona [id: 0..N-1] {
+	Fotocopiadora.fotocopiar();
+}
+
+--------------------------------------------------------------------
+
+b) Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada
+
+Monitor Fotocopiadora() {
+	boolean libre = true;
+	cond cola;
+	int esperando = 0;
+	
+	procedure permiso() {
+		if (not libre) { 		// si no esta libre
+			esperando ++;		
+			wait cola;		// espera en la cola
+		} else {
+			libre = false;		// sino la utiliza
+	}
+
+	procedure fotocopiar() {
+		// fotocopiar
+	}
+
+	procedure terminar() {
+		if (esperando > 0) {		
+			esperando --;		// terminó de utilizarla
+			signal(cola);		// envía señal a la var cond
+		}
+		else libre = true;
+	}
+}
+
+
+process Persona [id: 0..N-1] {
+	Fotocopiadora.permiso();		// pide permiso p utilizar
+	Fotocopiadora.fotocopiar();
+	Fotocopiadora.terminar();
+}
+
+--------------------------------------------------------------------
+
+c) Modifique la solución de (b) para el caso en que se deba dar prioridad de acuerdo a la edad de cada persona (cuando la fotocopiadora está libre la debe usar la persona de mayor edad entre las que estén esperando para usarla).
+
+Monitor Fotocopiadora() {
+	bool libre = true;
+	cond espera[N]; 			   // para la prioridad
+	int esperando = 0, idAux; 
+	colaOrdenada fila;
+	
+	procedure permiso (idP, edad: in int) {
+		if (not libre) { 		   // si no esta libre
+			insertar(fila, idP, edad); // lo inserto en la fila
+			esperando ++;		
+			wait (espera[idP]);	   // se le indica a la persona con su id que espere
+		} else {
+			libre = false;		   // sino, la utiliza
+	}
+
+	procedure fotocopiar() {
+		// fotocopiar
+	}
+
+	procedure terminar() {
+		if (esperando > 0) {
+			sacar(fila, idAux)		
+			esperando --;		// terminó de utilizarla
+			signal(espera[idAux]);	// envía señal a la var cond de esa persona
+		}
+		else libre = true;
+	}
+}
+
+
+process Persona [id: 0..N-1] {
+	// ahora se guarda la edad de la persona para darle prioridad en caso de ser necesario
+	int edad = ..;
+	Fotocopiadora.permiso(id, edad);
+	Fotocopiadora.fotocopiar();
+	Fotocopiadora.terminar();
+}
+
+--------------------------------------------------------------------
+
+d) Modifique la solución de (a) para el caso en que se deba respetar estrictamente el orden dado por el identificador del proceso (la persona X no puede usar la fotocopiadora hasta que no haya terminado de usarla la persona X-1).
+
+
+Monitor Fotocopiadora() {
+	bool libre = true;
+	int siguiente = 0;
+	cond cola;	 			// para la prioridad
+
+	procedure permiso(idP:int) {
+		if (not libre) and (idP != siguiente) { 	// si no es el sig
+			wait (cola);	
+		}
+		libre = false;
+	}
+
+	procedure fotocopiar() {
+		// fotocopiar
+	}
+
+	procedure terminar() {
+		siguiente ++;		
+		signal(cola);
+		libre = true;	
+	}
+}
+
+
+process Persona [id: 0..N-1] {
+	Fotocopiadora.permiso(id);
+	Fotocopiadora.fotocopiar();
+	Fotocopiadora.terminar();
+}
+
+
+--------------------------------------------------------------------
+
+e) Modifique la solución de (b) para el caso en que además haya un Empleado que le indica a cada persona cuando debe usar la fotocopiadora.
+
+Monitor Fotocopiadora() {
+	cond empleado, persona, fin;
+	int esperando = 0;
+
+	procedure permiso() {
+		signal(empleado);	// envia señal para indicar que esta libre
+		esperando ++;		
+		wait(persona);		// espera que le asigne fotocop a la persona
+	}
+
+	procedure fotocopiar() {
+		// fotocopiar
+	}
+
+	procedure terminar() {
+		signal(fin);	
+	}
+
+	procedure asignar() {
+		if (esperando == 0) {
+			wait(empleado);	// espera que haya personas en la cola
+		} else {
+			esperando --;
+		}
+		signal(persona);	// envia señal a la persona para que utilice la fotocopiadora
+		wait(fin);		// espera que termine de fotocopiar
+	}
+}
+
+process Empleado {
+	int i;
+	for i = 0..N-1 {
+		Fotocopiadora.asignar();	
+	}
+}
+
+
+process Persona [id: 0..N-1] {
+	Fotocopiadora.permiso();
+	Fotocopiadora.fotocopiar();
+	Fotocopiadora.terminar();
+}
+
+
+
+
+
+
+--------------------------------------------------------------------
+
+f) Modificar la solución (e) para el caso en que sean 10 fotocopiadoras. El empleado le indica a la persona cuando puede usar una fotocopiadora, y cual debe usar. 
