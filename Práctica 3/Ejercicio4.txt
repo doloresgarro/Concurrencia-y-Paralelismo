@@ -1,0 +1,87 @@
+4. En una mesa de exámenes hay 3 profesores que les deben tomar un examen
+oral a 30 alumnos de acuerdo al orden de llegada. Cada examen es tomado por 
+un único profesor. Cuando un alumno llega, espera a que alguno de los profesores
+(cualquiera) lo llame y se dirige al escritorio correspondiente a 
+ese profesor, donde le tomará el examen; al terminar el profesor le da la 
+nota y el alumno se retira. Cuando un profesor está libre llama al siguiente 
+alumno. Nota: todos los procesos deben terminar su ejecución
+
+Monitor Examen {
+	cola pLibres;	
+	cond esperaA;		// almacena alumnos que esperan al profesor
+	int esperando = 0, cantLibres = 0;
+
+
+	procedure llegada(idProfesor: out int) {	
+		if (cantLibres == 0) {		// si no hay profes disponibles
+			esperando ++;		
+			wait(esperaA);		// esperan en la cola
+		}
+		else cantLibres --;
+		pop(pLibres, idProfesor);	// profesor pasa a estar ocupado  
+	}
+
+	procedure proximo(idProfesor: in int) {
+		push(pLibres, idProfesor);	// profesor pasa a estar desocupado  
+		if (esperando > 0) {
+			esperando --; 		
+			signal(esperaA);	// llama a alumno
+		}
+		else cantLibres ++;
+	} 
+
+}
+
+
+Monitor Escritorio [id: 0..2] {
+	cond vAlumno, vProfesor;
+	text examen;
+	int res;
+	boolean listo = false;
+	
+	// proceso que usa el alumno
+	process rendir(nota: in int){
+		// toma examen
+		listo = true;		// por si el alumno llega antes que el profesor y luego nunca lo despiertan
+		signal(Vprofesor);	// rinde	
+		wait(vAlumno);		// espera rta del profe
+		nota = res;		// recibe nota
+		signal(vProfesor);	// avisa que recibio la nota
+	}
+
+	// proceso que usa el profesor
+	process tomarExamen() {
+		if (not listo) { 	 // se duerme si el alumno no llego
+			wait(vProfesor); // espera que llegue alumno
+		}
+		// toma examen
+	}
+
+	// proceso que usa el profesor
+	process enviarNota(nota: in int) {
+		nota = res;
+		signal(vAlumno);	// envia nota
+		wait(vProfesor);	// espera que le responda que lo recibio
+		listo = false;		// para el siguiente alumno
+	}
+
+
+}
+
+process Profesor [id: 0..2] {
+	int alumnos = 30, idA, nota;
+	while (while alumnos <> 0) {
+		Examen.proximo(idA);	// asigna alumno
+		Escritorio[id].tomarExamen();
+		Escritorio[id].enviarNota(nota);
+		alumnos --;
+	}
+}
+
+process Alumno [id: 0..29] {
+	int idP, nota;			// idP --> id que recibe del profesor que le toma
+	
+	AsignarAlumno.llegada(idP);
+	Escritorio[idP].rendir(nota);
+
+}
