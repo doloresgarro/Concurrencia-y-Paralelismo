@@ -1,0 +1,79 @@
+6. En una playa hay 5 equipos de 4 personas cada uno (en total son 20 personas 
+donde cada una conoce previamente a que equipo pertenece). Cuando las personas 
+van llegando esperan con los de su equipo hasta que el mismo esté completo
+(hayan llegado los 4 integrantes), a partir de ese momento el equipo comienza 
+a jugar. 
+
+El juego consiste en que cada integrante del grupo junta 15 monedas de 
+a una en una playa (las monedas pueden ser de 1, 2 o 5 pesos) y se suman los 
+montos de las 60 monedas conseguidas en el grupo. Al finalizar cada persona debe
+conocer el monto total juntado por su grupo. 
+Nota: maximizar  la concurrencia. Suponga que para simular la búsqueda de una moneda
+por parte de una persona existe una función Moneda() que retorna el valor de la
+moneda encontrada
+
+Monitor Juego {
+	int cant = 0, monedasJugador[4] ([4] 0);
+	cond espera, inicio; 
+
+	process llegar() {
+		cant ++;
+		if (cant == 4) {
+			signal (inicio);
+		} 
+		wait(espera);
+	}
+	
+	process iniciar() {
+		if (cant < 4) {
+			wait(inicio);
+		}
+	}
+
+	// Moneda() --> retorna valor de moneda encontrada
+	process jugar(id: in int) { 	
+		if (monedasJugador[id] < 16) {
+			monedasJugador[id] = monedasJugador[id] + Moneda();
+		}	
+	}
+
+	process conocerTotal(totalMonedas: out int) {
+		for i..0..3 {
+			totalMonedas:= totalMonedas + monedadJugador[i]; 
+		}
+	}
+	
+	process terminar() {
+		signal_all(espera);
+	}
+
+
+
+}
+
+Monitor Equipo [id: 0..4] {
+	int cant = 0;
+	cond espera;
+
+	process llegada() {
+		cant ++;
+		if (cant < 4) {
+			wait(espera);		// espera que lleguen
+		} else signal_all(espera); 	// despierta a todos
+	}
+
+}
+
+process Jugador [id: 0..19] {
+	int miEquipo = ..;			// num de 0 a 4
+	int totalMonedas = 0;	
+
+	Equipo[miEquipo].llegada();
+
+	Juego.llegar();
+	Juego.iniciar();
+	Juego.jugar(id);
+	Juego.conocerTotal(totalMonedas);
+	Juego.terminar();
+}
+

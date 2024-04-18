@@ -1,0 +1,104 @@
+5. Suponga una comisión con 50 alumnos. Cuando los alumnos llegan forman una fila, 
+una vez que están los 50 en la fila el jefe de trabajos prácticos les entrega el 
+número de grupo (número aleatorio del 1 al 25) de tal manera que dos alumnos tendrán 
+el mismo número de grupo (suponga que el jefe posee una función DarNumero() que 
+devuelve en forma aleatoria un número del 1 al 25, el jefe de trabajos prácticos no 
+guarda el número que le asigna a cada alumno).
+
+Cuando un alumno ha recibido su número
+de grupo comienza a realizar la práctica. Al terminar de trabajar, el alumno le avisa al
+jefe de trabajos prácticos y espera la nota. El jefe de trabajos prácticos, cuando han
+llegado los dos alumnos de un grupo les devuelve a ambos la nota del GRUPO (el primer 
+grupo en terminar tendrá como nota 25, el segundo 24, y así sucesivamente hasta el último 
+que tendrá nota 1).
+
+
+Monitor Aula {
+	int cant = 0;
+	Cola c;
+	cond espera[50] ([50] 0), profesor;
+	int numAsignado[50] ([50] 0), finalizadas = 0;
+	
+
+	// PROCESOS QUE UTILIZA EL ALUMNO
+	process esperar(idA: in int) {
+		cant ++;
+		c.push(idA);			// encolo alumno que espera
+		if (cant < 50) {  		// si no llegaron todos no empieza
+			wait(profesor);	
+		} else signal(profesor);	// cuando llegan todos da la señal
+	}
+
+	process recibirNum(idA: in int; num: out int) {
+		wait(esperaNumGrupo[idA]);	// espera que le asignen grupo	
+		num =  numAsignado[idA];	// le asignan 
+
+	}
+
+	
+	process obtenerNota (num: in int) {
+		finalizadas --;
+		numAsignado[idAux] = num;
+		signal(espera[idAux]);
+
+	}	
+
+
+	// PROCESOS QUE UTILIZA EL PROFESOR
+	process esperarAlumnos() {
+		if (cant < 50) {
+			wait(profesor);		// profesor espera que esten todos	
+		}
+	}
+
+	process asignarGrupo(num: in int) {
+		idAux = c.pop();		// desencola al q esta esperando
+		numAsignado[idAux] = num;	// le asigna grupo
+		(signal(espera[idAux));		// le avisa
+	}
+	process recibirTarea(num: out int) {
+		if (finalizadas == 0) {
+			wait(profesor);		// se duerme hasta q alguien termine
+		}
+		finalizadas++;	
+	}
+
+	process corregirTarea(num: in int, puntaje: in int) {
+		nota[num] = puntaje;
+		signal_all(notaFinal[num]);
+	}
+
+}
+ 
+
+
+process Profesor () {
+	int i, numAux, nota = 25, tareasTerminadas[25] ([25] = 0);
+
+	Aula.esperarAlumnos();
+	for i = 1..50 {
+		numAux = asignarGrupo(); 	
+		Aula.asignarGrupo(numAux); 		
+	}
+	
+	for i = 1..50 {
+		Aula.recibirTarea(numAux);
+		tareasTerminadas[numAux] ++;
+		if (tareasTerminadas[numAux] == 2) {
+			Aula.corregirTarea(numAux, nota);
+			puntaje --;
+		}
+	} 
+
+}
+
+process Alumno [id: 0.. 49] {
+	int num, nota;
+	Aula.esperar(id);
+	Aula.recibirNumero(id, num); 	// recibe num de grupo
+	Aula.realizarR
+	Aula.obtenerNota(num, nota);
+}
+
+
+
