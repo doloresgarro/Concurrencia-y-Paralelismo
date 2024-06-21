@@ -1,147 +1,180 @@
-Ejercicio 4
-4. Existen N personas que deben fotocopiar un documento cada una. 
-Resolver cada ítem usando semáforos:
-a) Implemente una solución suponiendo que existe una única fotocopiadora 
-compartida por todas las personas, y las mismas la deben usar de a una 
-persona a la vez, sin importar el orden. Existe una función Fotocopiar() 
-llamada por la persona que simula el uso de la fotocopiadora. 
-Sólo se deben usar los procesos que representan a las Personas.
+4. Existen N personas que deben fotocopiar un documento cada una. Resolver cada ítem usando semáforos:
+a) Implemente una solución suponiendo que existe una única fotocopiadora compartida por todas las personas, y las mismas la deben usar de a una persona a la vez, sin importar el orden. 
 
--------------------------------------------------------
-- mutex --> exclusión mutua
-- espera[N] --> semaforo privado para cada persona
-- resultados[N] --> para saber si ya fotocopio o no
-- impresora = 0 --> libre
--------------------------------------------------------
-
-a.
+Existe una función Fotocopiar() llamada por la persona que simula el uso de la fotocopiadora. Sólo se deben usar los procesos que representan a las Personas.
 
 sem mutex = 1;
 
-process Persona[id: 0..N-1] {
-		P(mutex); 
-		Fotocopiar();
+Process Persona [id: 1..N] {
+	P(mutex);
+	Fotocopiar();
+	V(mutex);
+}
+
+b) Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada.
+
+Cola c;
+sem mutex = 1, espera[N] = ([N] 0);
+
+Process Persona [id: 1..N] {
+	int aux;
+	P(mutex);
+	if (libre) {
+		libre = false;
 		V(mutex);
-}
-
--------------------------------------------------------
-
-b. Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada
-
-sem mutex = 1; // exclusion mutua
-boolean libre = true;
-cola C;
-sem espera[N] = ([N] 0);
-
-process Persona(id: 0..N-1) {
-
-    P(mutex);
-    if (libre) { libre = false; }
-    else { push(C, id);}
-    V(mutex);    // Salir de la sección crítica 
-
-    P(espera[id]);   // Esperar a que sea el turno de la persona
-    Fotocopiar();
-
-    P(mutex);
-    if (not (empty(C))) { pop(C,id); V(espera[id]) }  	  	    
-    else { libre = true; } 
-    V(mutex);
-
-}
-
--------------------------------------------------------
-
-c) Modifique la solución de (b) para el caso en que se deba dar prioridad de acuerdo a la edad de cada persona (cuando la fotocopiadora está libre la debe usar la persona de mayor edad entre las que estén esperando para usarla).
-
-
-sem mutex = 1; // exclusion mutua
-boolean libre = true;
-cola C;
-sem espera[N] = ([N] 0);
-edad 
-
-process Persona(id: 0..N-1) {
-    int edad = X;
-	
-    P(mutex);
-    if (libre) { libre = false; }
-    else { push_ordenado(C, id, edad); }  
-    V(mutex);    // Salir de la sección crítica 
-
-    P(espera[id], edad);   // Esperar a que sea el turno de la persona
-    Fotocopiar();
-
-    P(mutex);
-    if (not (empty(C))) { pop(C, id, edad); V(espera[id], edad)}  	    
-    else { libre = true; } 
-    V(mutex);
-
-}
-
--------------------------------------------------------
-
-d) Modifique la solución de (a) para el caso en que se deba respetar estrictamente el orden dado por el identificador del proceso (la persona X no puede usar la fotocopiadora hasta que no haya terminado de usarla la persona X-1).
-
-sem mutex = 1;
-int contador = 0; // sig persona 
-
-
-process Persona[id: 0..N-1] {
-	P(mutex); 
-	while (id <> contador) {  // sale del while cuando es su turno
-		V(mutex);         // mutex = 0		
-		P(mutex);	  // mutex = 1
+	} else {
+		push(C, id); 
+		V(mutex);
+		P(espera[id]);
 	}
 
 	Fotocopiar();
-	contador = contador + 1;  // id + 1
 
+	P(mutex); 
+	if (empty(c))
+		libre = true;
+	else {
+		pop(c, aux);
+		V(espera[aux]);
+	}
 	V(mutex);
 }
 
--------------------------------------------------------
+c) Modifique la solución de (b) para el caso en que se deba dar prioridad de acuerdo a la edad de cada persona (cuando la fotocopiadora está libre la debe usar la persona de mayor edad entre las que estén esperando para usarla).
 
-e) Modifique la solución de (b) para el caso en que además haya un Empleado que le indica a cada persona cuando debe usar la fotocopiadora
+Cola colaEspecial;
+sem mutex = 1, espera[N] = ([N] 0);
 
-sem mutex = 1; // exclusion mutua
-sem permiso = 1;
-cola C;
-sem espera[N] = ([N] 0);
-
-process Persona(id: 0..N-1) {
-
-    P(mutex);
-    push(C, id);
-    V(mutex);    // Salir de la sección crítica 
-
-    V(permiso);	     // avisa a empleado que esta en la cola
-    P(espera[id]);   // Esperar a que sea su turno
-    Fotocopiar();
-    
-    V(listo);        // avisa al empleado que ya termino
-
-}
-
-
-process Empleado () {
-    int aux;
-    while (true) {
-	P(permiso);  // lo despiertan cuando hay al menos 1 persona en la C
-	
+Process Persona [id: 1..N] {
+	int aux, edad = ...;
 	P(mutex);
-	id = pop(C, aux);      // desencola a la persona
-	V(mutex);
+	if (libre) {
+		libre = false;
+		V(mutex);
+	} else {
+		push(C, id, edad); 
+		V(mutex);
+		P(espera[id]);
+	}
 
-   	V(espera[id]);       // espera a que la persona le diga q terminó
-	P(listo);            // indica que ya uso la fotocopiadora
-	
-    }
+	Fotocopiar();
+
+	P(mutex); 
+	if (empty(c))
+		libre = true;
+	else {
+		pop(c, aux);
+		V(espera[aux]);
+	}
+	V(mutex);
 }
 
--------------------------------------------------------
 
-f) Modificar la solución (e) para el caso en que sean 10 fotocopiadoras. El empleado le indica a la persona cuando puede usar una fotocopiadora, y cual debe usar.
+d) Modifique la solución de (a) para el caso en que se deba respetar estrictamente el orden dado por el identificador del proceso (la persona X no puede usar la fotocopiadora hasta que no haya terminado de usarla la persona X-1).
+
+sem espera[N] = ([N] 0);
+ 
+Process Persona [id: 1..N] {
+	P(espera[id]);
+	Fotocopiar();
+	V(espera[id+1]);
+}
+
+
+e) Modifique la solución de (b) para el caso en que además haya un Empleado 
+que le indica a cada persona cuando debe usar la fotocopiadora.
+
+Cola c;
+sem mutex = 1, pedido = 0, fin = 0, espera[N] = ([N] 0);
+
+Process Empleado {
+	while (true) {
+		P(pedido);
+		P(mutex);
+		pop(c, idP);
+		V(mutex);
+		V(espera[idP]);
+		P(fin);
+	}	
+}
+
+Process Persona [id: 1..N] {
+	P(mutex);
+	push(c, id);
+	V(mutex);
+	V(pedido);
+	P(espera[id]);
+	Fotocopiar();	
+	V(fin);
+}
+
+
+f) Modificar la solución (e) para el caso en que sean 10 fotocopiadoras. El 
+empleado le indica a la persona cuando puede usar una fotocopiadora, y cual 
+debe usar. 
+
+Cola c, fotocopiadoras;
+sem mutex = 1, mutex_f, pedido = 0, espera[N] = ([N] 0);
+sem impresoras = 1;
+int usarF[N] = ([N] 0);
+
+Process Empleado {
+	int cant = 0, idP;
+	
+	while (cant < N)) {
+		P(pedido);	// espera pedido
+		P(impresoras);  // impresoras > 0 --> impresoras-1
+		
+		P(mutex); 
+		pop(c, idP);
+		V(mutex);
+		
+		P(mutex_f);
+		pop(fotocopiadoras, f);
+		V(mutex_f);
+		
+		usarF[id] = f;
+		V(espera[idP]);
+		cant = cant + 1;	
+	}
+}
+
+Process Persona [id: 1..N] {
+	P(mutex);
+	push(c, id);
+	V(mutex);
+
+	V(pedido);
+
+	P(espera[id]);
+	Fotocopiar(usarF[id]);	
+	
+	P(mutex_f);
+	push(fotocopiadoras, f);  // ya imprimió, entonces encola 
+	V(mutex_f);
+
+	V(impresoras);    	  // libera impresora
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

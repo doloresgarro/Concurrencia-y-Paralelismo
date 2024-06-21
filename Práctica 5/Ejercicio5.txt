@@ -1,0 +1,64 @@
+5. En un sistema para acreditar carreras universitarias, hay UN Servidor que
+atiende pedidos de U Usuarios de a uno a la vez y de acuerdo al orden en que 
+se hacen los pedidos. 
+
+Cada usuario trabaja en el documento a presentar, y 
+luego lo envía al servidor; espera la respuesta del mismo que le indica si 
+está todo bien o hay algún error. 
+Mientras haya algún error vuelve a trabajar 
+con el documento y a enviarlo al servidor. Cuando el servidor le responde que 
+está todo bien el usuario se retira. Cuando un usuario envía un pedido espera 
+a lo sumo 2 minutos a que sea recibido por el servidor, pasado ese tiempo 
+espera un minuto y vuelve a intentarlo (usando el mismo documento
+
+Process sistema is 
+
+Task Servidor is 
+	Entry pedido(idU:IN integer, p: IN text, res: IN/OUT bool);
+end Servidor;
+
+Task type Usuario;
+
+
+
+
+Task Body Usuario IS
+	doc: text;
+	hayError: bool;
+	idU: integer;
+Begin
+	hayError:= false;
+	doc = generarDocumento();
+	while (!hayError) loop
+		select
+			Servidor.pedido(doc, hayError);
+		or delay 120
+			delay 60;
+			Servidor.pedido(doc, hayError);
+		end select; 
+		if (!hayError) doc:= generarDocumento();
+	end loop;
+End Usuario;
+
+Task body Servidor is 
+	idU:integer;
+	p:text;
+	res:bool;
+Begin
+	loop 
+		accept pedido(doc:in text, res: out bool) do
+			res = atender(doc);
+		end pedido;
+	end loop;
+end Servidor;
+
+Begin 
+	null;
+End sistema;			
+
+
+
+			
+
+
+

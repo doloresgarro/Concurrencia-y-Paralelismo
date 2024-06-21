@@ -1,61 +1,62 @@
-5. Se debe simular una maratón con C corredores donde en la llegada hay UNA
+5. Se debe simular una maratón con C corredores donde en la llegada hay UNA 
 máquinas expendedoras de agua con capacidad para 20 botellas.
-Además existe un repositor encargado de reponer las botellas de la máquina.
-Cuando los C corredores han llegado al inicio comienza la carrera. Cuando un 
-corredor termina la carrera se dirigen a la máquina expendedora, espera su turno
-(respetando el orden de llegada), saca una botella y se retira. Si encuentra la 
-máquina sin botellas, le avisa al repositor para que cargue nuevamente la máquina 
-con 20 botellas; espera a que se haga la recarga; saca una botella y se retira.
-Nota: maximizar la concurrencia; mientras se reponen las botellas se debe permitir
-que otros corredores se encolen. 
+Además existe un repositor encargado de reponer las botellas de la máquina. 
+Cuando los C corredores han llegado al inicio comienza la carrera. 
 
-int corredores = 0, botellas = 20;
-sem mutex = 1, espera[C] = ([C] 0), listo = 1, reponer = 1 ;
-cola q_ordenada;
+Cuando un corredor termina la carrera se dirigen a la máquina expendedora, 
+espera su turno (respetando el orden de llegada), saca una botella y se retira. 
+Si encuentra la máquina sin botellas, le avisa al repositor para que cargue 
+nuevamente la máquina con 20 botellas; espera a que se haga la recarga; saca una botella y se retira.
+Nota: maximizar la concurrencia; mientras se reponen las botellas se debe 
+permitir que otros corredores se encolen. 
 
-process corredor [id: 0..C-1] {
-	int i;
+int corredores = 0, latas = 20;
+sem mutex = 1, mutex_c = 1, barrera = 0, espera[C] = ([C] 0);
+sem reponer = 0, listo = 0;
+bool libre = true;
+Cola c; 
 
+Process Corredor [id: 1..C] {
+	int i, aux; 
 	P(mutex);
-	corredores = corredores + 1;
-	if (corredores == C) { //llegan todos los corredores a la meta
-		for i = 1..C { V(barrera); push(q_ordenada, id);}
+	corredor = corredor + 1;
+
+	if (contador == C) {
+		for i = 1..C V(barrera); // despierta para que empiecen	
 	}
 	V(mutex);
-
-	P(mutex);
-	if (botellas > 0) { botellas = botellas - 1; }
-	else {
-		avisoReponerBotellas();  // le avisa al repositor
+	
+	P(barrera);			// empieza la carrera
+	
+	P(mutex_c)
+	if (not libre) 
+		push(c, id);	
+		V(mutex_c);
+		P(espera[id]);
+	} else 
+		libre = false;
+		V(mutex_c);	
+	}
+	
+	if (botellas == 0) {
 		V(reponer);
 		P(listo);
 	}
-	V(mutex);
 
-	// toma botella
-	
-	// desencolo al corredor porque ya tomo su botella
-	P(mutex); // si pongo esta instrucción dsp del if puede ser que otro proceso gane la exclusion mutua, desencole y luego el proceso actual quiera desencolar cuando no hay nada --> se rompe
-	if (not empty(q_ordenada)) {
-		pop(q_ordenada, id);
-		V(mutex);
+	botellas --;			// toma botella
+	P(mutex_c);
+	if (empty(c)) libre = true;
+	else {
+		pop(c, aux);
+		V(espera[aux]);
 	}
-
 }
 
-process Repositor {
+Process Repositor {
 	while (true) {
-		P(reponer); // espera que le digan que reponga
-		reponerBotellas();
-		V(listo);   // avisa que ya repuso
+		P(reponer);
+		botellas = 20;
+		V(listo);
 	}
+
 }
-
-
-
-
-
-
-
-
-

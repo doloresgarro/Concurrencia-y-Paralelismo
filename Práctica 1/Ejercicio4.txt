@@ -1,0 +1,105 @@
+4. En cada ítem debe realizar una solución concurrente de grano grueso
+(utilizando <> y/o<await B; S>) para el siguiente problema, teniendo en 
+cuenta las condiciones indicadas en el item. 
+
+Existen N personas que deben imprimir un trabajo cada una. 
+
+a) Implemente una solución suponiendo que existe una única impresora 
+compartida por todas las personas, y las mismas la deben usar de a una 
+persona a la vez, sin importar el orden. Existe una función 
+Imprimir(documento) llamada por la persona que simula el uso 
+de la impresora. Sólo se deben usar los procesos que representan a las 
+Personas
+
+boolean libre = true;
+
+Process Persona[id: 1..N] {
+	text documento = generarDocumento();
+
+	<await(libre); libre = false>;
+	Imprimir(documento);
+	<libre = true>;		
+}
+
+b) Modifique la solución de (a) para el caso en que se deba respetar el orden
+de llegada.
+
+Cola c;
+int sig = -1;
+
+Process Persona[id: 1..N] {
+	text documento = generarDocumento();
+
+	<if (sig = -1) sig = id
+	 else c.push(id)>;
+	<await (sig == id)>;
+	Imprimir(documento);
+	<if (empty(c) sig = -1)
+	 else sig = c.pop()>;		
+}
+
+c) Modifique la solución de (b) para el caso en que se deba respetar el 
+orden de llegada pero dando prioridad de acuerdo a la edad de cada persona 
+(cuando la impresora está libre la debe usar la persona de mayor edad entre 
+las que hayan solicitado su uso).
+
+int sig = -1;
+ColaEspecial c; // inserta de mayor a menor
+
+Process Persona[id: 1..N] {
+	int edad = ...;
+	text documento = generarDocumento();
+
+	<if (sig = -1) sig = id
+	 else c.agregar(id, edad)>;
+	<await (sig == id)>;
+	Imprimir(documento);
+	<if (empty(c) sig = -1)
+	 else sig = c.sacar()>;		
+}
+
+
+d) Modifique la solución de (a) para el caso en que se deba respetar 
+estrictamente el orden dado por el identificador del proceso (la persona X 
+no puede usar la impresora hasta que no haya terminado de usarla la persona 
+X-1).
+
+
+e) Modifique la solución de (c) para el caso en que además hay un proceso Coordinador que 
+le indica a cada persona cuando puede usar la impresora.
+
+int act = -1;
+bool listo = false;
+ok = false;
+
+Process Persona [id: 1..N] {
+	
+	<await (act == id)>;
+	ok = true;
+	Imprimir(documento);
+	listo = true;
+}
+
+Process Coordinador {
+	for i = 0..N {
+		act = i;
+		<await (ok); ok = false;
+		<await(listo); listo = false>; // espera que use impresora
+		
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

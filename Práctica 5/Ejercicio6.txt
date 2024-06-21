@@ -1,0 +1,122 @@
+6. En una playa hay 5 equipos de 4 personas cada uno (en total son 20 
+personas donde cada una conoce previamente a que equipo pertenece).
+
+Cuando las personas van llegando esperan con los de su equipo hasta que el 
+mismo esté completo (hayan llegado los 4 integrantes), a partir de ese 
+momento el equipo comienza a jugar. 
+
+El juego consiste en que cada integrante del grupo junta 15 monedas de a una en una playa (las monedas pueden ser de 1, 2 o 5 pesos) y se suman los montos de las 60 monedas conseguidas en el grupo. 
+
+Al finalizar cada persona debe conocer grupo que más dinero junto. 
+Nota: maximizar la concurrencia. Suponga que para simular la búsqueda de una moneda por parte de una persona existe una función Moneda() que retorna el valor de la moneda encontrada.
+
+Procedure Juego is 
+
+Task type Equipo is 
+	Entry barrera(idp:IN integer; idE IN integer);
+	Entry monedas(cant: IN integer);
+end Equipo;
+
+Task type Jugador is 
+	Entry Identificacion(id: IN integer);
+	Entry comenzar();
+	Entry ganador(idG: IN integer);
+end Jugador;
+
+Task type Coordinador is 
+	Entry terminar(cant: IN integer, idE: IN integer);
+end Coordinador;
+
+arrEquipo: (1..5) of Equipo;
+arrJugador: (1..20) of Jugador;
+
+Task Body Equipo is
+	idEquipo, total: integer;
+	c: cola;
+Begin
+	total:= 0;
+	for i in 1..4 loop
+		accept barrera(idp:IN integer; idE IN integer) do
+			push(c, idP);
+			idEquipo:= idE;
+		end; barrera
+	end loop;
+	
+	for i in 1..4 loop
+		arrJugador(pop(c)).comenzar();
+	end loop;
+	
+	for i in 1..4 loop 
+		accept monedas(cant: in int) do 
+			total+= cant;
+		end monedas;
+	end loop; 
+	
+	Coordinador.terminar(total, idE);
+
+End Equipo;
+
+
+Cuando las personas van llegando esperan con los de su equipo hasta que el 
+mismo esté completo (hayan llegado los 4 integrantes), a partir de ese 
+momento el equipo comienza a jugar. 
+
+El juego consiste en que cada integrante del grupo junta 15 monedas de a una en una playa (las monedas pueden ser de 1, 2 o 5 pesos) y se suman los montos de las 60 monedas conseguidas en el grupo.
+
+{
+Task type Jugador is 
+	Entry Identificacion(id: IN integer);
+	Entry comenzar();
+	Entry ganador(idG: IN integer);
+end Jugador;
+}
+
+Task body Jugador
+	idP, idE, idG, cant: integer;
+Begin
+	cant:= 0;
+	accept Identificacion(idP: IN integer) do
+		id:= i;
+	end Identificacion;
+
+	arrEquipo(idE).barrera(idP, idE);
+	
+	accept comenzar();
+
+	for i in 1..15 loop
+		cant+= moneda();
+	end loop;
+	
+	arrEquipo(idE).monedas(cant);
+
+	accept ganador(equipoG: IN integer) do 
+		idG:= equipoG;
+	end ganador;
+end Jugador;
+
+Task Body coordinador is 
+	max, idMax: integer;
+Begin
+	max:= -1;
+	for i in 1..5 loop
+		accept terminar(cant: IN integer, idE: IN integer) do
+			if (cant > max) do 
+				max:= cant;
+				idMax:= idE;
+			end if;
+		end terminar;
+	end loop;
+
+	for i in 1..20 loop
+		arrJugador(i).ganador(idMax);
+	end loop;
+End Coordinador;
+
+
+
+Begin
+	for i int 1..20 loop
+		arrJugador(i).Identificacion(i);
+	end loop;
+End Juego;
+

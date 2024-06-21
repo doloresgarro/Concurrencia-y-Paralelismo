@@ -1,0 +1,33 @@
+5. Resolver con SENTENCIAS AWAIT (<> y/o <await B; S>) el siguiente problema. 
+
+En un examen final hay P alumnos y 3 profesores. Cuando todos los alumnos han 
+llegado comienza el examen. Cada alumno resuelve su examen, lo entrega y 
+espera a que alguno de los profesores lo corrija y le indique la nota. Los 
+profesores corrigen los exámenes respectando el orden en que los alumnos van 
+entregando.
+
+int cant = 0;
+cola c;
+bool empezar = false, corregido = false;
+
+Process Alumno [id: 1..P] {
+	int miNota = -1;
+
+	<cant = cant + 1>;
+	<await (empezar)>;	
+	examen = resolver();	
+	<c.push(id, examen)>;	
+	<await (corregido); miNota = nota
+	 corregido = false>;
+	
+}
+
+Process Profesor [id: 1..3] {
+	<await (cant == P)>;
+	empezar = true;
+	for i = 1..N {
+		<if (not empty(c)); c.pop(act, examen)>;
+		nota = corregir();
+		<corregido = true>;		
+	}
+}

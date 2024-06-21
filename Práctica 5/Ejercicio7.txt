@@ -1,0 +1,62 @@
+7. Hay un sistema de reconocimiento de huellas dactilares de la policía que tiene 8 Servidores para realizar el reconocimiento, cada uno de ellos trabajando con una Base de Datos propia; 
+a su vez hay un Especialista que utiliza indefinidamente. El sistema funciona de la siguiente manera: 
+
+el Especialista toma una imagen de una huella (TEST) y se la envía a los servidores para que cada uno de ellos le devuelva el código y el valor de similitud de la huella que más se asemeja a TEST en su BD; al final del procesamiento, el especialista debe conocer el código de la huella con mayor valor de similitud entre las devueltas por los 8 
+servidores. Cuado ha terminado de procesar una huella comienza nuevamente todo el ciclo. 
+
+Nota: suponga que existe una función Buscar(test, código, valor) que utiliza cada Servidor donde recibe como parámetro de entrada la huella test, y devuelve como parámetros de salida el código y el valor de similitud de la huella más parecida a test en la BD correspondiente. Maximizar la concurrencia y no generar demora innecesaria.
+
+
+Procedure Ej is
+
+Task type Servidor is 
+	Entry obtenerSimilitud(test: IN text);
+end Servidor;
+
+Task Especialista is
+	Entry muestra(m: IN integer);
+	Entry mayorSimilitud(res: IN integer);
+end Especialista;
+
+
+
+
+
+-------------------------------------------------------------------
+
+Task Body Especialista is 
+	i, cod, mayorSimilitud: integer;
+	text test;	
+Begin
+	test = tomarHuella();
+	for i in 1..2*8 loop
+		select
+			accept muestra(m: OUT integer) do
+				m:= test;
+			end muestra;
+		or
+			accept Servidor.resultado(cod:IN integer, valorH: IN integer) do
+				if (valorH > mayorSimilitud) do
+					codigo:= cod;
+					mayorSimilitud:= valorH;
+				end if;
+			end Servidor;
+		end select;
+	end loop;
+End;
+
+Task Body Servidor is
+	idS, cod, valorH: integer;	
+Begin
+	Loop
+		Especialista.muestra(m);	// pide muestra 
+		Buscar(test, codigo, valor); 	
+		Especialista.resultado(cod, valorH);
+	end Loop;
+End Servidor;
+
+
+
+Begin 
+	NULL 
+End Ej;
