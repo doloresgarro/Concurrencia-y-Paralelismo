@@ -1,0 +1,34 @@
+7. Suponga que existe un antivirus distribuido en él hay R procesos robots que continuamente 
+están buscando posibles sitios web infectados; cada vez que encuentran uno avisan la 
+dirección y continúan buscando. Hay un proceso analizador que se encargue de hacer todas las pruebas 
+necesarias con cada uno de los sitios encontrados por los robots para 
+determinar si están o no infectados. 
+
+
+Process Robot [id: 1..R] {
+	text sitio;
+	while (true) {
+		buscar(sitio);
+		Admin!Infectado(sitio);
+	}
+}
+
+
+Process Analizador {
+	text sitio;
+	while (true){
+		Admin!pedido();
+		Admin?espera(sitio);
+		analizar(sitio);
+	}
+}
+
+Process Admin {
+	text sitio;
+	cola c;
+
+	do Robot[*]?Infectado(sitio) --> push(c, sitio);
+	 not empty(c); Analizador?pedido() --> pop(c, sitio)
+						   Analizador!espera(sitio);
+
+}

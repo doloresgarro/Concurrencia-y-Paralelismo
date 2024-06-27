@@ -1,0 +1,39 @@
+10.Resolver con PMS (Pasaje de Mensajes SINCRÓNICOS) el siguiente problema. En un 
+estadio de fútbol hay una máquina expendedora de gaseosas que debe ser usada por E 
+Espectadores de acuerdo al orden de llegada. Cuando el espectador accede a la máquina en 
+su turno usa la máquina y luego se retira para dejar al siguiente. Nota: cada Espectador una 
+sólo una vez la máquina
+
+
+Process Espectador [id:1 ..P] {
+	Admin!llegada(id);
+	Empleado?turno[id]();
+	usar();
+	Empleado!fin();
+}
+
+
+Process Empleado {
+	int idP;
+	while (true) {
+		Admin!pedido();
+		Admin?espera(idP);
+		Espectador[idP]!turno();
+		Espectador?fin();
+		
+	}
+}
+
+
+Process Admin {
+	int idP;
+	Cola c;
+	
+	do Espectador[*]?llegada(idP) --> push(c, idP);
+	 not empty(c); Empleado?pedido() --> pop(c, idP);
+				              Empleado!espera(idP);
+
+}
+
+
+// igual al 9
