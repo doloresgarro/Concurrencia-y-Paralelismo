@@ -1,49 +1,48 @@
-3. Se debe modelar una casa de Comida Rápida, en el cual trabajan 2 cocineros y 3
-vendedores. Además, hay C clientes que dejan un pedido y quedan esperando a que se lo
-alcancen. 
-Los pedidos que hacen los clientes son tomados por cualquiera de los vendedores y se lo 
-pasan a los cocineros para que realicen el plato. Cuando no hay pedidos para atender, los 
-vendedores aprovechan para reponer un pack de bebidas de la heladera (tardan entre 1 y 3 
-minutos para hacer esto).
-Repetidamente cada cocinero toma un pedido pendiente dejado por los vendedores, lo 
-cocina y se lo entrega directamente al cliente correspondiente.
+3. Se debe modelar una casa de Comida Rápida, en el cual trabajan 2 cocineros 
+y 3 vendedores. Además, hay C clientes que dejan un pedido y quedan esperando 
+a que se lo alcancen. 
+
+Los pedidos que hacen los clientes son tomados por cualquiera de los 
+vendedores y se lo pasan a los cocineros para que realicen el plato. Cuando 
+no hay pedidos para atender, los vendedores aprovechan para reponer un pack 
+de bebidas de la heladera (tardan entre 1 y 3 minutos para hacer esto).
+
+Repetidamente cada cocinero toma un pedido pendiente dejado por los 
+vendedores, lo cocina y se lo entrega directamente al cliente 
+correspondiente.
 Nota: maximizar la concurrencia.
 
+chan llegada(int);
+chan respuesta[C](text);
+chan pedido(int, text);
+chan respuesta[C](text);
 
-chan Pedido(int, text);
-chan espera[C](Res);
-chan Realizar(int, text);
+Process Cliente [id: 1..C] {
+	text pedido = generarPedido();
+	send llegada(id, pedido);
+	receive respuesta[id](res);
 
-Process Cliente [id: 0..C-1] {
-	text p, Res plato;
-	send Pedido(id, p);
-	receive espera[id](plato);
 }
 
-Process Vendedor[id: 0..2] {
-	int idCliente;
-	text p;
+Process Vendedor [id: 1..3]{
+	int id; text pedido;
 	while (true) {
-		if (empty Pedido) 
-			delay(180);
-		else {
-			receive Pedido (idCliente, p);
-			send Realizar(idCliente, p);
-		}
+		if (not empty llegada) {
+			receive llegada(idP, pedido);
+			send pedido(idP, pedido);
+		} else delay(120); // repone botellas	
 	}
 }
 
-Process Cocinero [id: 0..1] {
-	text p;
-	Res plato;
-	int idCliente;
-
+Process Cocinero [id: 1..2] {
+	int idP; text pedido, plato;
 	while (true) {
-		receive Realizar(idCliente, p);
-		plato = cocinar();
-		send espera[idCliente](plato);
-	}		
+		receive pedido(idP, pedido);
+		plato = cocinar(pedido);
+		send respuesta[idP](plato);
+	}
 }
+
 
 
 

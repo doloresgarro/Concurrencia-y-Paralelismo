@@ -1,36 +1,29 @@
 1. Implementar el acceso a una base de datos de solo lectura que puede atender a lo sumo 5 consultas simultáneas.
 
-int atendiendo = 5;
 
-Monitor bd {
-	int disponibles = 5; 
+Monitor BaseDeDatos {
+	bool libre = 5;
+	cond cola; 
 	int esperando = 0;
-	cond cola;
-	
-	procedure disponible {
-		if (disponibles > 0) { // se puede realizar una consulta
-			disponibles --;
-		} else {
+
+	Procedure llegada() {
+		if (libre == 0) {
 			esperando ++;
-			wait (cola);
-		}
-	}
+			wait(cola);
+		} else 	libre --;
+	} 
 
-	procedure terminarConsulta() {
+	Procedure salir() {
 		if (esperando > 0) {
-			esperando --; // no espera mas
-			signal(cola); // despierta al proceso dormido
-		}
-		else { disponibles++; }
+			esperando --;
+			signal(cola);
+		} else libre ++;
 	}
-
-}
-
-process Consulta {
-	bd.disponible();
-	Consultar();
-	bd.TerminarConsulta();
 }
 
 
-
+Process Persona [id: 1..5] {
+	Cajero.llegada();
+	leer();
+	Cajero.fin();
+}

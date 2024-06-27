@@ -1,0 +1,183 @@
+2. Existen N personas que deben fotocopiar un documento cada una. Resolver cada ítem usando monitores:
+
+a) Implemente una solución suponiendo que existe una única fotocopiadora compartida por todas las personas, y las mismas la deben usar de a una persona a la vez, sin importar el orden. 
+Existe una función Fotocopiar() que simula el uso de la fotocopiadora. 
+
+Sólo se deben usar los procesos que representan a las Personas (y los monitores que sean necesarios)
+
+Monitor Fotocopiadora {
+	Procedure utilizar() {
+		Fotocopiar();
+	}
+}
+
+Process Persona [id: 0..N-1] {
+	Fotocopiadora.utilizar();
+}
+
+b) Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada.
+
+Monitor Fotocopiadora {
+	int esperando = 0;
+	cond cola;
+	bool libre = true;
+
+	Procedure llegada (id: IN int) {
+		if (not libre) { 
+			esperando ++;
+			wait(cola);
+		} else libre = false;
+	}
+
+
+	Procedure fin() {
+		if (esperando > 0) {
+			esperando --; 
+			signal(cola);
+		} else libre = false;
+	}
+
+}
+
+Process Persona [id: 0..N-1] {
+	Fotocopiadora.llegada(id);
+	Fotocopiar();
+	Fotocopiadora.fin();
+}
+
+
+
+c) Modifique la solución de (b) para el caso en que se deba dar prioridad 
+de acuerdo a la edad de cada persona (cuando la fotocopiadora está libre la 
+debe usar la persona de mayor edad entre las que estén esperando para 
+usarla)
+
+Process Persona [id: 1..N] {
+	int edad = …;
+	
+	Fotocopiadora.llegada(id, edad);
+	Fotocopiar();
+	Fotocopiadora.fin();
+}
+
+
+Monitor Fotocopiadora {
+	int esperando = 0;
+	cond espera[N]; 
+	Cola colaOrdenada;
+	bool libre = true;
+
+	Procedure llegada(id, edad: IN int) {
+		if (not libre) {
+			esperando ++; 
+			push(colaOrdenada, (id, edad));
+			wait(espera[id]);
+		} else libre = false;
+	}
+
+	Procedure fin () {
+		int idAux;
+		if (esperando > 0) {
+			pop (colaEspecial, (idAux);
+			esperando --;
+			signal(espera[idAux]);	
+		} else libre = true;
+	}
+}
+
+
+d) Modifique la solución de (a) para el caso en que se deba respetar 
+estrictamente el orden dado por el identificador del proceso (la persona X 
+no puede usar la fotocopiadora hasta que no haya terminado de usarla la 
+persona X-1).
+
+Monitor Fotocopiadora {
+	int próximo = 0;
+	cond espera[N]; 
+
+	Procedure utilizar(i: IN int) {
+		if (próximo <> id) wait(espera[id]);
+	}
+
+	Procedure fin () {
+		proximo ++;
+		signal(espera[proximo]);
+	}
+
+}
+
+Process Persona [id: 0..N-1] {
+	Fotocopiadora.utilizar(id);
+	Fotocopiar();
+	Fotocopiadora.fin();
+}
+
+
+e) Modifique la solución de (b) para el caso en que además haya un Empleado 
+que le indica a cada persona cuando debe usar la fotocopiadora
+
+?????
+
+Monitor Fotocopiadora {
+	int esperando = 0;
+	cond cola, empleado;
+	bool libre = true;
+
+	Procedure llegada (id: IN int) {
+		if (not libre) { 
+			esperando ++;
+			wait(cola);
+		} else libre = false;
+	}
+	
+	Procedure fin() {
+		signal(empleado);
+	}
+
+	Procedure sig() {
+		if (esperando == 0) wait(empleado);
+		esperando --; 
+		signal(cola); 
+	}
+
+}
+
+Process Persona [id: 0..N-1] {
+	Fotocopiadora.llegada(id);
+	Fotocopiar();
+	Fotocopiadora.fin();
+}
+
+
+
+Process Empleado {
+	while (true) {
+		Fotocopiadora.sig();
+	}
+
+
+} 
+
+
+f) Modificar la solución (e) para el caso en que sean 10 fotocopiadoras. El empleado le indica a la persona cuando puede usar una fotocopiadora, y cual debe usar.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
