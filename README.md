@@ -8,6 +8,6 @@
   
   :thought_balloon: [Práctica 3](./Práctica%203) : Monitores
 
-  :thought_balloon: [Práctica 3](./Práctica%204) : PMA y PMS
+  :thought_balloon: [Práctica 4](./Práctica%204) : PMA y PMS
 
-  :thought_balloon: [Práctica 3](./Práctica%205) : ADA
+  :thought_balloon: [Práctica 5](./Práctica%205) : ADA
